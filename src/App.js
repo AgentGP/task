@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ListItem, ListItemButton, ListItemIcon, ListItemText, TextField } from "@mui/material";
-import { CheckBoxOutlined, CheckBoxOutlineBlankOutlined } from '@mui/icons-material';
+import { CheckBoxOutlined, CheckBoxOutlineBlankOutlined, DeleteForever } from '@mui/icons-material';
 
 export default function App() {
 
@@ -29,19 +29,22 @@ export default function App() {
     setTasks(tasks => tasks.filter((task) => task.id !== id))
   
   //const editSubStep = 
-  //#endregion
+  //#endregion   
 
 
   // display a task
   const taskItem = ({ id, text, completed, steps }) => {
     return (
-      <ListItemButton divider>
+      <ListItem divider>
         <ListItemIcon onClick={() => toggleTaskCompletion(id, {completed: !completed})}>
           {completed ? <CheckBoxOutlined /> : <CheckBoxOutlineBlankOutlined />}
-        </ListItemIcon>  
-        <TextField value = {text} variant="standard" onChange={(e) => {editText(e.target.value)} }/> 
+        </ListItemIcon>
+        <TextField value = {text} variant="standard" onChange={(e) => {editText(e.target.value)} }/>
+        <ListItemIcon style={{right: '50%'}}>
+          <DeleteForever />
+        </ListItemIcon>
         {steps != null && steps.map(task => taskItem(task))}
-      </ListItemButton>
+      </ListItem>
     )
   }
 
