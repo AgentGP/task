@@ -22,12 +22,15 @@ export default function App() {
     );
   }
   const editComplete = (id, completed) =>
-    toggleTaskCompletion(id, {completed: completed})
+    toggleTaskCompletion(id, { completed: completed })
   const editText = (id, text) =>
-    toggleTaskCompletion(id, {text: text})
-  const deleteTask = (id) => 
+    toggleTaskCompletion(id, { text: text })
+
+  // showing a dialog before deleting
+  const deleteTask = (id) => {
+    
     setTasks(tasks => tasks.filter((task) => task.id !== id))
-  
+  }
   //const editSubStep = 
   //#endregion   
 
@@ -35,12 +38,17 @@ export default function App() {
   // display a task
   const taskItem = ({ id, text, completed, steps }) => {
     return (
-      <ListItem divider>
-        <ListItemIcon onClick={() => toggleTaskCompletion(id, {completed: !completed})}>
+      <ListItem variant="filled" divider>
+        <ListItemIcon onClick={() => toggleTaskCompletion(id, { completed: !completed })}>
           {completed ? <CheckBoxOutlined /> : <CheckBoxOutlineBlankOutlined />}
         </ListItemIcon>
-        <TextField value = {text} variant="standard" onChange={(e) => {editText(e.target.value)} }/>
-        <ListItemIcon style={{right: '50%'}}>
+        <TextField
+          value={text}
+          variant="outlined"
+          onChange={(e) => editText(id, e.target.value)} //update text
+          style={{ textDecoration: completed ? "line-through" : "none" }} //line-through when complete
+        />
+        <ListItemIcon style={{ marginLeft: "20px" }} onClick={() => deleteTask(id)}>
           <DeleteForever />
         </ListItemIcon>
         {steps != null && steps.map(task => taskItem(task))}
