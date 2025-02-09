@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { ListItem, ListItemButton, ListItemIcon, ListItemText, TextField } from "@mui/material";
-import { CheckBoxOutlined, CheckBoxOutlineBlankOutlined, DeleteForever } from '@mui/icons-material';
+import { IconButton, ListItem, TextField } from "@mui/material";
+import { CheckBoxOutlined, CheckBoxOutlineBlankOutlined, DeleteForever, AddBox } from '@mui/icons-material';
+
+
 
 export default function App() {
 
@@ -14,52 +16,56 @@ export default function App() {
   // console.log(tasks.map(({id, text}) => console.log(id + " " + text)))
 
   //#region set tasks
-  const toggleTaskCompletion = (id, updates) => {
+  const updateTask = (id, updates) => {
     setTasks(prevTasks =>
       prevTasks.map(task =>
         task.id === id ? { ...task, ...updates } : task
       )
     );
   }
-  const editComplete = (id, completed) =>
-    toggleTaskCompletion(id, { completed: completed })
-  const editText = (id, text) =>
-    toggleTaskCompletion(id, { text: text })
 
   // showing a dialog before deleting
   const deleteTask = (id) => {
-    
+    // TODO add a dialog
     setTasks(tasks => tasks.filter((task) => task.id !== id))
   }
-  //const editSubStep = 
   //#endregion   
 
 
   // display a task
-  const taskItem = ({ id, text, completed, steps }) => {
+  const taskItem = ({ id, text, completed }) => {
     return (
       <ListItem variant="filled" divider>
-        <ListItemIcon onClick={() => toggleTaskCompletion(id, { completed: !completed })}>
+        <IconButton onClick={() => updateTask(id, { completed: !completed })}>
           {completed ? <CheckBoxOutlined /> : <CheckBoxOutlineBlankOutlined />}
-        </ListItemIcon>
+        </IconButton>
         <TextField
           value={text}
           variant="outlined"
-          onChange={(e) => editText(id, e.target.value)} //update text
           style={{ textDecoration: completed ? "line-through" : "none" }} //line-through when complete
+          onChange={(e) => updateTask(id, {text: e.target.value})} //update text
+          //onBlur={() => saveToCloud(id, {text: text})}
         />
-        <ListItemIcon style={{ marginLeft: "20px" }} onClick={() => deleteTask(id)}>
+        <IconButton style={{ marginLeft: "20px" }} onClick={() => deleteTask(id)}>
           <DeleteForever />
-        </ListItemIcon>
-        {steps != null && steps.map(task => taskItem(task))}
+        </IconButton>
       </ListItem>
     )
   }
+
+  const addButton = () => {
+    return(
+    <IconButton onClick={() => 
+      updateTask(prevTasks => [...prevTasks, new Task()])}> //TODO
+      <AddBox color="success"/>
+    </IconButton>
+  )}
 
   return (
     <div>
       <h1>My Tasks</h1>
       {tasks.map(task => taskItem(task))}
+      {addButton()}
     </div>
   )
 }
