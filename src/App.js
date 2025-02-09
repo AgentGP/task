@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { IconButton, ListItem, TextField } from "@mui/material";
 import { CheckBoxOutlined, CheckBoxOutlineBlankOutlined, DeleteForever, AddBox } from '@mui/icons-material';
 
-
+import darkTheme from "./theme.js";
+import Task from './Task'
 
 export default function App() {
 
@@ -21,7 +22,7 @@ export default function App() {
       prevTasks.map(task =>
         task.id === id ? { ...task, ...updates } : task
       )
-    );
+    )
   }
 
   // showing a dialog before deleting
@@ -47,22 +48,30 @@ export default function App() {
           //onBlur={() => saveToCloud(id, {text: text})}
         />
         <IconButton style={{ marginLeft: "20px" }} onClick={() => deleteTask(id)}>
-          <DeleteForever />
+          <DeleteForever/>
         </IconButton>
       </ListItem>
     )
   }
 
   const addButton = () => {
-    return(
-    <IconButton onClick={() => 
-      updateTask(prevTasks => [...prevTasks, new Task()])}> //TODO
-      <AddBox color="success"/>
-    </IconButton>
-  )}
+    return (
+      <IconButton
+        onClick={() =>
+          setTasks(prevTasks => {
+            const newId = prevTasks.length > 0 ? prevTasks[prevTasks.length - 1].id + 1 : 1
+            return [...prevTasks, { id: newId, text: "", completed: false }]
+          })
+        }
+      >
+        <AddBox color="success" />
+      </IconButton>
+    )
+  }
 
   return (
-    <div>
+    // <ThemeProvider theme={dark}></ThemeProvider> TODO
+    <div style={{ display: 'block', alignItems: 'center', height: '100vh' }}>
       <h1>My Tasks</h1>
       {tasks.map(task => taskItem(task))}
       {addButton()}

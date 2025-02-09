@@ -1,8 +1,8 @@
 class Task {
     constructor(id, text, steps, completed) {
         this.id = id;
-        this.text = text;
+        this.text = '';
         this.steps = steps;
-        this.completed = completed;
+        this.completed = false;
     }
 }
