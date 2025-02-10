@@ -1,20 +1,18 @@
-const express = require('express');
-const jsonServer = require('json-server');
+const express = require('express')
+const app = express()
+const mongoose = require('mongoose')
 
-const app = express();
-const port = 5000;
+mongoose.connect('mongodb://localhost/users/tasks')
+const db = mongoose.connection
+db.on('error', (error) => console.error(error))
+db.once('open', () => console.log("connected to server"))
 
-// Set up a JSON server (for mock database)
-const router = jsonServer.router('db.json');
-const middlewares = jsonServer.defaults();
+app.use(express.json())
 
-// Use JSON Server middlewares (like logging, static, and CORS support)
-app.use(middlewares);
+const tasksRouter = require('./routes/tasks')
+app.use('/tasks', tasksRouter)
 
-// Set up the API route for JSON Server
-app.use('/api', router);
+const port = 5000
+app.listen(port, () => console.log("json server started"))
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
-});
+
