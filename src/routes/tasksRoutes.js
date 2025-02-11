@@ -29,7 +29,7 @@ router.get("/", async (req, res) => {
 
 //get one
 router.get("/:id", async(req, res) => {
-    const tasks = await getAllTasks()
+    const tasks = await getAllTasks() //todo still problematic
     const id = parseInt(req.params.id)
     const task = tasks.filter(task => task.id === id)
 
