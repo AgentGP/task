@@ -1,18 +1,12 @@
-const express = require('express')
+const express = require("express");
+const tasksRoutes = require('./routes/tasksRoutes')
+
+// This file is responsible for the server itself (listening and connecting the logic frontend <=> tasks.json)
+
 const app = express()
-const mongoose = require('mongoose')
+app.use("/tasks", tasksRoutes)
 
-mongoose.connect('mongodb://localhost/users/tasks')
-const db = mongoose.connection
-db.on('error', (error) => console.error(error))
-db.once('open', () => console.log("connected to server"))
-
-app.use(express.json())
-
-const tasksRouter = require('./routes/tasks')
-app.use('/tasks', tasksRouter)
-
-const port = 5000
-app.listen(port, () => console.log("json server started"))
-
-
+const PORT = process.env.PORT || 5000
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`)
+});

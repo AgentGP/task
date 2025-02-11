@@ -2,9 +2,6 @@ import React, { useState } from "react";
 import { IconButton, ListItem, TextField } from "@mui/material";
 import { CheckBoxOutlined, CheckBoxOutlineBlankOutlined, DeleteForever, AddBox } from '@mui/icons-material';
 
-import darkTheme from "./theme.js";
-import Task from './Task'
-
 export default function App() {
 
   const [tasks, setTasks] = useState([
