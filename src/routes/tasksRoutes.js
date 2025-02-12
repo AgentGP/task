@@ -1,6 +1,6 @@
 const express = require("express")
 const fs = require("fs")
-const tasksFile = "./src/tasks.json" //the correct path
+const tasksDB = "./src/tasksDB.json" //the correct path
 
 /*
 - get all
@@ -11,40 +11,55 @@ const tasksFile = "./src/tasks.json" //the correct path
 */
 const router = express.Router();
 
-//get all
-const getAllTasks = async () => {
-  try {
-    const data = await fs.readFileSync(tasksFile, "utf-8")
-    return JSON.parse(data)
-  } catch (err) {
-    console.error(err)
-    throw err
+// Helper - Read DB
+const readDB = () => {
+  const data = fs.readFileSync(tasksDB);
+  return JSON.parse(data);
+};
+
+// Helper - Write DB
+const writeDB = (data) => {
+  fs.writeFileSync(tasksDB, JSON.stringify(data, null, 2));
+};
+
+// Get All
+router.get('/', (req, res) => {
+  const db = readDB();
+  res.json(db.tasks);
+});
+
+// Add
+router.post('/', (req, res) => {
+  const db = readDB();
+  const newTask = { id: Date.now(), text: req.body.text, completed: false };
+  db.tasks.push(newTask);
+  writeDB(db);
+  res.json(newTask);
+});
+
+// Update
+router.patch('/:id', (req, res) => {
+  const db = readDB();
+  const taskIndex = db.tasks.findIndex(task => task.id == req.params.id);
+
+  if (taskIndex !== -1) {
+      db.tasks[taskIndex] = { ...db.tasks[taskIndex], ...req.body };
+      writeDB(db);
+      res.json(db.tasks[taskIndex]);
+  } else {
+      res.status(404).json({ error: 'Task not found' });
   }
-}
-
-router.get("/", async (req, res) => {
-  const tasks = await getAllTasks()
-  res.json(tasks)
 });
 
-//get one
-router.get("/:id", async(req, res) => {
-    const tasks = await getAllTasks() //todo still problematic
-    const id = parseInt(req.params.id)
-    const task = tasks.filter(task => task.id === id)
+// Delete a task
+router.delete('/:id', (req, res) => {
+  const db = readDB();
 
-    res.send("task #" + req.params.id + 
-      ""//JSON.stringify(task)
-    )
+  const deletedText = (db.tasks.find(task => task.id == req.params.id)).text; //returns task => task.text
+
+  db.tasks = db.tasks.filter(task => task.id != req.params.id);
+  writeDB(db);
+  res.json({ message: `Task ${deletedText} deleted` });
 });
-
-//update
-router.patch("/:id", (req, res) => {});
-
-//create
-router.post("/", (req, res) => {});
-
-//create
-router.delete("/:id", (req, res) => {});
 
 module.exports = router;
