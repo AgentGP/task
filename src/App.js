@@ -1,77 +1,135 @@
-import React, { useState } from "react";
-import { IconButton, ListItem, TextField } from "@mui/material";
-import { CheckBoxOutlined, CheckBoxOutlineBlankOutlined, DeleteForever, AddBox } from '@mui/icons-material';
+import React, { useEffect, useState } from "react"
+import { CssBaseline, IconButton, ListItem, TextField } from "@mui/material"
+import { CheckBoxOutlined, CheckBoxOutlineBlankOutlined, DeleteForever, AddBox } from '@mui/icons-material'
+
+import apiRequest from './apiRequest.js'
+
+const NEW_TASK_CONSTANT = "ABCD"
 
 export default function App() {
 
-  const [tasks, setTasks] = useState([
-    { id: 1, text: "Yes", completed: false },
-    { id: 2, text: "Go With The Flow", completed: false },
-    { id: 3, text: "Eminem As A Whole", completed: false },
-  ])
+  const [tasks, setTasks] = useState([])
 
-  // yes i am the best!
-  // console.log(tasks.map(({id, text}) => console.log(id + " " + text)))
+  const tasksOnMount = async () => {
+    try {
+      const data = await apiRequest("GET")
+      setTasks(data)
+    } catch (error) {
+      console.error("Error fetching tasks:", error)
+      setTasks([{ id: 1 }])
+    }
+  }
+  useEffect(() => {
+    tasksOnMount()
+  }, [])
 
   //#region set tasks
-  const updateTask = (id, updates) => {
+  const updateTask = async (id, updates, saveToDB = true) => {
+    const saveToDatabase = async (task) => {
+      if (saveToDB) {
+        try {
+          const response = await apiRequest("PATCH", String(id), { ...task, ...updates })
+          if (!response)
+            throw new Error("Failed to save task")
+          console.log("Task saved successfully:", response)
+        } catch (error) {
+          console.error("Error saving task:", error)
+          // Optionally handle rollback if needed (e.g., show error to user)
+        }
+      }
+    }
+
+    setTasks((prevTasks) =>
+      prevTasks.map((task) => {
+        if (task.id === id) {
+          const updatedTask = { ...task, ...updates }
+
+          // Save to the DB in the background
+          saveToDatabase(updatedTask)
+
+          return updatedTask
+        }
+        return task
+      })
+    )
+  }
+
+
+
+  const createTask = async (task) => {
+    const id = await apiRequest("POST", "", { ...task, id: Date.now() })
+
     setTasks(prevTasks =>
-      prevTasks.map(task =>
-        task.id === id ? { ...task, ...updates } : task
+      prevTasks.map(t =>
+        t.id === task.id ? { ...t, id: id } : t
       )
     )
   }
 
-  // showing a dialog before deleting
-  const deleteTask = (id) => {
+  const addTaskToList = async () => {
+    // creating a new task, and NOT saving it (because its empty)
+    const newId = NEW_TASK_CONSTANT + Date.now() //attaching a constant to know if its saved or not
+    setTasks(prevTasks => [...prevTasks, { id: newId, text: "", completed: false }])
+    return newId
+  }
+
+  const deleteTask = async (id) => {
     // TODO add a dialog
-    setTasks(tasks => tasks.filter((task) => task.id !== id))
+    // TODO then/catch because of no saving of task
+    await apiRequest("DELETE", id)
+      .then(() => {
+        setTasks(tasks => tasks.filter((task) => task.id !== id))
+      })
+      .catch((error) => {
+        setTasks(tasks => tasks.filter((task) => task.id !== id))
+      })
   }
-  //#endregion   
-
-
-  // display a task
-  const taskItem = ({ id, text, completed }) => {
-    return (
-      <ListItem variant="filled" divider>
-        <IconButton onClick={() => updateTask(id, { completed: !completed })}>
-          {completed ? <CheckBoxOutlined /> : <CheckBoxOutlineBlankOutlined />}
-        </IconButton>
-        <TextField
-          value={text}
-          variant="outlined"
-          style={{ textDecoration: completed ? "line-through" : "none" }} //line-through when complete
-          onChange={(e) => updateTask(id, {text: e.target.value})} //update text
-          //onBlur={() => saveToCloud(id, {text: text})}
-        />
-        <IconButton style={{ marginLeft: "20px" }} onClick={() => deleteTask(id)}>
-          <DeleteForever/>
-        </IconButton>
-      </ListItem>
-    )
-  }
+  //#endregion 
 
   const addButton = () => {
     return (
       <IconButton
-        onClick={() =>
-          setTasks(prevTasks => {
-            const newId = prevTasks.length > 0 ? prevTasks[prevTasks.length - 1].id + 1 : 1
-            return [...prevTasks, { id: newId, text: "", completed: false }]
-          })
-        }
+        onClick={() => addTaskToList()}
       >
         <AddBox color="success" />
       </IconButton>
     )
   }
 
+  // display a task
+  const taskItem = ({ id, text, completed }) => {
+    return (
+      <ListItem variant="filled" divider>
+        <IconButton onClick={() => { updateTask(id, { completed: !completed }) }}>
+          {completed ? <CheckBoxOutlined /> : <CheckBoxOutlineBlankOutlined />}
+        </IconButton>
+        <TextField
+          value={text}
+          variant="outlined"
+          style={{ textDecoration: completed ? "line-through" : "none" }}
+          onChange={(e) => updateTask(id, { text: e.target.value }, false)}
+          onBlur={() => {
+            if (String(id).includes(NEW_TASK_CONSTANT) && text.trim() !== "") {
+              createTask({ id, text, completed })
+            } else if (id && text.trim() !== "") {
+              updateTask(id, { text })
+            }
+          }} />
+        <IconButton style={{ marginLeft: "20px" }} onClick={() => deleteTask(id)}>
+          <DeleteForever />
+        </IconButton>
+      </ListItem>
+    )
+  }
+
   return (
     // <ThemeProvider theme={dark}></ThemeProvider> TODO
     <div style={{ display: 'block', alignItems: 'center', height: '100vh' }}>
-      <h1>My Tasks</h1>
-      {tasks.map(task => taskItem(task))}
-      {addButton()}
+      <CssBaseline>
+        <h1>My Tasks</h1>
+        {tasks.map(task => taskItem(task))}
+        {addButton()}
+      </CssBaseline>
     </div>
   )
 }
